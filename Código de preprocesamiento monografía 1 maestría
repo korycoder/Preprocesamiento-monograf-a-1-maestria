@@ -1,0 +1,458 @@
+# Exploración inicial del conjunto de datos
+
+import pandas as pd
+
+# Carga del archivo CSV en un DataFrame
+dataset_path = '/content/mbti_1.csv'  # Cambiar según la ubicación del archivo
+df = pd.read_csv(dataset_path)
+
+# Visualización de las primeras 5 filas del dataset
+print("Primeras 5 filas del conjunto de datos:")
+print(df.head())
+
+
+
+
+# Análisis de Filas y Clases en un Dataset
+
+import pandas as pd
+
+# Número total de filas en el dataset
+numero_filas = df.shape[0]
+print(f"Número total de filas en el conjunto de datos: {numero_filas}")
+
+# Clases posibles de una columna específica
+# Cambia 'type' por el nombre de la columna que deseas analizar
+columna_interes = 'type'
+clases_posibles = df[columna_interes].unique()
+print(f"Clases posibles en la columna '{columna_interes}': {clases_posibles}")
+
+# Número total de clases únicas
+numero_clases = len(clases_posibles)
+print(f"Número total de clases en la columna '{columna_interes}': {numero_clases}")
+
+# Conteo de registros por clase en la columna de etiquetas
+conteo_clases = df['type'].value_counts()
+print("Conteo de registros por clase:")
+print(conteo_clases)
+
+# Porcentaje por clase (opcional para entender mejor el desbalance)
+porcentaje_clases = conteo_clases / len(df) * 100
+print("\nPorcentaje de registros por clase:")
+print(porcentaje_clases)
+
+
+
+# Visualización de la Distribución de Clases
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Configuración del estilo de los gráficos
+sns.set(style="whitegrid")
+
+# Contar la cantidad de registros por clase
+conteo_clases = df['type'].value_counts()
+
+# Crear el gráfico de barras
+plt.figure(figsize=(10, 6))
+sns.barplot(x=conteo_clases.index, y=conteo_clases.values, palette="viridis")
+
+# Configurar los títulos y etiquetas del gráfico
+plt.title('Distribución de Clases en la Columna "type"', fontsize=16)
+plt.xlabel('Clases', fontsize=14)
+plt.ylabel('Cantidad de Registros', fontsize=14)
+plt.xticks(rotation=45, fontsize=12)
+plt.yticks(fontsize=12)
+
+# Mostrar el gráfico
+plt.tight_layout()
+plt.show()
+
+
+
+
+# Análisis de la Longitud de Texto y su Distribución por Clase
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Crear una nueva columna que calcule la longitud de los textos en "posts"
+df['text_length'] = df['posts'].apply(len)
+
+# Estadísticas descriptivas generales de la longitud de texto
+print("Estadísticas generales de la longitud de texto:")
+print(df['text_length'].describe())
+
+# Estadísticas descriptivas por clase
+print("\nEstadísticas de longitud de texto por clase:")
+estadisticas_por_clase = df.groupby('type')['text_length'].describe()
+print(estadisticas_por_clase)
+
+# Gráfico de la distribución general de longitudes de texto
+plt.figure(figsize=(12, 6))
+sns.histplot(df['text_length'], bins=30, kde=True, color='blue')
+plt.title('Distribución General de Longitudes de Texto', fontsize=16)
+plt.xlabel('Longitud de Texto', fontsize=14)
+plt.ylabel('Frecuencia', fontsize=14)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+# Gráfico de la distribución de longitudes por clase
+plt.figure(figsize=(12, 8))
+sns.boxplot(x='type', y='text_length', data=df, palette='viridis')
+plt.title('Distribución de Longitudes de Texto por Clase', fontsize=16)
+plt.xlabel('Clase (type)', fontsize=14)
+plt.ylabel('Longitud de Texto', fontsize=14)
+plt.xticks(rotation=45, fontsize=12)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+
+
+
+# Limpieza de URLs en la Columna 'posts'
+
+import pandas as pd
+import re
+
+# Cargar el dataset original
+df = pd.read_csv('/content/mbti_1.csv')  # Asegúrate de que este archivo contiene la columna 'type'
+
+# Función para eliminar URLs en el texto de la columna 'posts'
+def eliminar_urls(texto):
+    # Expresión regular para detectar URLs y reemplazarlas por una cadena vacía
+    return re.sub(r'http\S+|www\S+|https\S+', '', texto, flags=re.MULTILINE)
+
+# Aplicar la función solo a la columna 'posts' para eliminar las URLs
+df['posts'] = df['posts'].apply(eliminar_urls)
+
+# Verificar que la columna 'type' sigue presente después de la limpieza
+print("Columnas en el DataFrame después de eliminar URLs:", df.columns)
+
+# Mostrar las primeras filas para verificar que 'type' y otras columnas siguen presentes
+print(df.head())
+
+# Guardar el dataset modificado en un nuevo archivo CSV
+df.to_csv('dataset_sin_urls.csv', index=False)
+
+
+
+
+
+# Verificación de URLs Restantes en la Columna 'posts'
+
+import pandas as pd
+import re
+
+# Cargar el dataset
+df = pd.read_csv('/content/dataset_sin_urls.csv')  # Cambia el nombre del archivo si es necesario
+
+# Función para verificar si hay URLs en el texto
+def contiene_url(texto):
+    # Expresión regular para detectar URLs
+    url_pattern = r'http\S+|www\S+|https\S+'
+    # Buscar coincidencias en el texto
+    return bool(re.search(url_pattern, texto))
+
+# Aplicar la función a la columna 'posts' y filtrar filas que contienen URLs
+df_con_urls = df[df['posts'].apply(contiene_url)]
+
+# Verificar si hay filas con URLs
+if df_con_urls.empty:
+    print("No se encontraron URLs en la columna 'posts'.")
+else:
+    print("Se encontraron URLs en las siguientes filas:")
+    print(df_con_urls[['posts']])
+
+
+
+
+
+
+# Eliminación de Stopwords en la Columna 'posts'
+
+import pandas as pd
+from nltk.corpus import stopwords
+import re
+import nltk
+
+# Descargar stopwords de NLTK (si no lo has hecho antes)
+nltk.download('stopwords')
+
+# Cargar el dataset original
+df = pd.read_csv('/content/dataset_sin_urls.csv')  # Cambia el nombre del archivo si es necesario
+
+# Definir las stopwords en inglés (o ajusta al idioma correspondiente)
+stop_words = set(stopwords.words('english'))  # Cambia 'english' a 'spanish' si el texto está en español
+
+# Función para eliminar stopwords de un texto
+def eliminar_stopwords(texto):
+    # Eliminar caracteres especiales y pasar a minúsculas
+    palabras = re.sub(r'\W+', ' ', texto).lower().split()
+    # Filtrar las palabras que no están en la lista de stopwords
+    palabras_filtradas = [palabra for palabra in palabras if palabra not in stop_words]
+    # Unir las palabras filtradas en un texto limpio
+    return ' '.join(palabras_filtradas)
+
+# Aplicar la función solo a la columna 'posts' para eliminar las stopwords
+df['posts'] = df['posts'].apply(eliminar_stopwords)
+
+# Verificar que la columna 'type' y otras columnas siguen presentes
+print("Columnas en el DataFrame después de eliminar stopwords:", df.columns)
+
+# Guardar el dataset modificado en un nuevo archivo CSV con el nombre adecuado
+df.to_csv('dataset_limpio_sin_urls_y_sin_stopwords.csv', index=False)
+
+# Mostrar las primeras filas para verificar
+print(df.head())
+
+
+
+
+
+# Verificación de Stopwords Restantes en la Columna 'posts'
+
+import pandas as pd
+from nltk.corpus import stopwords
+import nltk
+
+# Descargar stopwords de NLTK (si no lo has hecho antes)
+nltk.download('stopwords')
+
+# Cargar el dataset limpio
+df = pd.read_csv('/content/dataset_limpio_sin_urls_y_sin_stopwords.csv')  # Asegúrate de usar el archivo correcto
+
+# Definir las stopwords en español (o ajusta al idioma correspondiente)
+stop_words = set(stopwords.words('spanish'))  # Cambia 'spanish' a 'english' si el texto está en inglés
+
+# Función para verificar si hay stopwords en el texto
+def contiene_stopwords(texto):
+    palabras = texto.split()
+    # Filtrar solo las palabras que están en la lista de stopwords
+    stopwords_en_texto = [palabra for palabra in palabras if palabra in stop_words]
+    return stopwords_en_texto
+
+# Aplicar la función a la columna 'posts' y filtrar filas que contienen stopwords
+df_con_stopwords = df[df['posts'].apply(lambda x: len(contiene_stopwords(x)) > 0)]
+
+# Verificar si hay filas con stopwords
+if df_con_stopwords.empty:
+    print("No se encontraron stopwords en la columna 'posts'.")
+else:
+    print("Se encontraron stopwords en las siguientes filas:")
+    print(df_con_stopwords[['posts']])
+
+
+
+
+
+# Identificación de Palabras Frecuentes en Textos
+
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+import matplotlib.pyplot as plt
+
+# Cargar el dataset
+file_path = '/content/dataset_limpio_sin_urls_y_sin_stopwords.csv'  # Ruta del archivo
+dataset = pd.read_csv(file_path)
+
+# Nombre de la columna que contiene los textos
+column_name = 'posts'
+
+# Configurar CountVectorizer para convertir los textos en una matriz de presencia binaria
+vectorizer = CountVectorizer(binary=True)
+X = vectorizer.fit_transform(dataset[column_name])
+
+# Calcular la proporción de registros en los que aparece cada palabra
+word_frequencies = (X.toarray().sum(axis=0)) / X.shape[0]
+
+# Filtrar las palabras que aparecen en más del 80% de los registros
+threshold = 0.8
+frequent_words = [(word, freq) for word, freq in zip(vectorizer.get_feature_names_out(), word_frequencies) if freq > threshold]
+
+# Ordenar las palabras por frecuencia
+frequent_words.sort(key=lambda x: x[1], reverse=True)
+
+# Extraer las palabras y sus frecuencias para el gráfico
+words, frequencies = zip(*frequent_words) if frequent_words else ([], [])
+
+# Crear el gráfico
+plt.figure(figsize=(10, 6))
+if words:
+    plt.barh(words, frequencies, align='center')
+    plt.xlabel('Proporción de Registros')
+    plt.ylabel('Palabras')
+    plt.title('Palabras presentes en más del 80% de los registros')
+    plt.gca().invert_yaxis()  # Invertir el eje Y para que las palabras más frecuentes estén en la parte superior
+    plt.tight_layout()
+    plt.show()
+else:
+    print("No hay palabras presentes en más del 80% de los registros.")
+
+
+
+
+
+# Eliminación de Palabras Frecuentes del Dataset
+
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Cargar el dataset
+file_path = '/content/dataset_limpio_sin_urls_y_sin_stopwords.csv'
+df = pd.read_csv(file_path)
+
+# Nombre de la columna que contiene los textos
+column_name = 'posts'
+
+# Crear una matriz binaria con CountVectorizer para calcular la frecuencia de palabras
+vectorizer = CountVectorizer(binary=True)
+X = vectorizer.fit_transform(df[column_name])
+
+# Calcular la proporción de registros en los que aparece cada palabra
+word_frequencies = (X.toarray().sum(axis=0)) / X.shape[0]
+
+# Filtrar las palabras que aparecen en más del 80% de los registros
+threshold = 0.8
+frequent_words_set = {
+    word for word, freq in zip(vectorizer.get_feature_names_out(), word_frequencies) if freq > threshold
+}
+
+# Función para eliminar palabras frecuentes del texto
+def remove_frequent_words(text, frequent_words):
+    words = text.split()
+    return ' '.join([word for word in words if word not in frequent_words])
+
+# Aplicar la función directamente sobre la columna original
+df[column_name] = df[column_name].apply(lambda text: remove_frequent_words(text, frequent_words_set))
+
+# Guardar el dataset limpio en un archivo CSV
+output_path = 'dataset_limpio_sin_palabras_frecuentes.csv'
+df.to_csv(output_path, index=False)
+
+# Verificar la estructura del dataset
+print("\nEstructura del dataset después de la limpieza:")
+print(df.head())
+print(f"\nEl dataset limpio se ha guardado como: {output_path}")
+
+
+
+
+
+
+
+
+# Verificación de Palabras Frecuentes en el Dataset Limpio
+
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+import matplotlib.pyplot as plt
+
+# Cargar el dataset
+file_path = '/content/dataset_limpio_sin_palabras_frecuentes.csv'  # Ruta del archivo
+dataset = pd.read_csv(file_path)
+
+# Nombre de la columna que contiene los textos
+column_name = 'posts'
+
+# Configurar CountVectorizer para convertir los textos en una matriz de presencia binaria
+vectorizer = CountVectorizer(binary=True)
+X = vectorizer.fit_transform(dataset[column_name])
+
+# Calcular la proporción de registros en los que aparece cada palabra
+word_frequencies = (X.toarray().sum(axis=0)) / X.shape[0]
+
+# Filtrar las palabras que aparecen en más del 80% de los registros
+threshold = 0.8
+frequent_words = [(word, freq) for word, freq in zip(vectorizer.get_feature_names_out(), word_frequencies) if freq > threshold]
+
+# Ordenar las palabras por frecuencia
+frequent_words.sort(key=lambda x: x[1], reverse=True)
+
+# Extraer las palabras y sus frecuencias para el gráfico
+words, frequencies = zip(*frequent_words) if frequent_words else ([], [])
+
+# Crear el gráfico
+plt.figure(figsize=(10, 6))
+if words:
+    plt.barh(words, frequencies, align='center')
+    plt.xlabel('Proporción de Registros')
+    plt.ylabel('Palabras')
+    plt.title('Palabras presentes en más del 80% de los registros')
+    plt.gca().invert_yaxis()  # Invertir el eje Y para que las palabras más frecuentes estén en la parte superior
+    plt.tight_layout()
+    plt.show()
+else:
+    print("No hay palabras presentes en más del 80% de los registros.")
+
+
+
+
+
+
+
+# Creación de Subdimensiones a partir de la Columna 'type'
+
+import pandas as pd
+
+# Cargar el dataset limpio
+df = pd.read_csv('/content/dataset_limpio_sin_palabras_frecuentes.csv')  # Asegúrate de usar el archivo correcto
+
+# Crear las columnas de subdimensiones a partir de la columna 'type'
+df['IE'] = df['type'].apply(lambda x: 1 if x[0] == 'I' else 0)  # Introversión/Extroversión
+df['NS'] = df['type'].apply(lambda x: 1 if x[1] == 'N' else 0)  # Intuición/Sensación
+df['TF'] = df['type'].apply(lambda x: 1 if x[2] == 'T' else 0)  # Pensamiento/Sentimiento
+df['PJ'] = df['type'].apply(lambda x: 1 if x[3] == 'P' else 0)  # Percepción/Juicio
+
+# Verificar que las subdimensiones se hayan creado correctamente
+print(df[['type', 'IE', 'NS', 'TF', 'PJ', 'posts']].head())
+
+# Guardar el dataset con las subdimensiones en un nuevo archivo CSV
+df.to_csv('dataset_con_subdimensiones.csv', index=False)
+
+
+
+
+
+
+# Diagnóstico y Visualización del Balance de Clases en las Subdimensiones
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Cargar el dataset con subdimensiones
+file_path = 'dataset_con_subdimensiones.csv'
+df = pd.read_csv(file_path)
+
+# Diagnóstico numérico de balance de clases
+subdimensiones = ['IE', 'NS', 'TF', 'PJ']
+balance_clases = {}
+
+for subdim in subdimensiones:
+    balance = df[subdim].value_counts(normalize=True) * 100  # Porcentaje de cada clase (0 o 1)
+    balance_clases[subdim] = balance
+
+# Crear un DataFrame con los resultados para visualización tabular
+balance_df = pd.DataFrame(balance_clases).T
+balance_df.columns = ['Clase 0 (%)', 'Clase 1 (%)']
+
+print("Diagnóstico numérico del balance de clases:")
+print(balance_df)
+
+# Visualización gráfica del balance de clases
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+axes = axes.flatten()
+
+for idx, subdim in enumerate(subdimensiones):
+    valores = df[subdim].value_counts(normalize=True) * 100
+    valores.plot(kind='bar', ax=axes[idx], color=['skyblue', 'orange'])
+    axes[idx].set_title(f'Balance de Clases en {subdim}')
+    axes[idx].set_xlabel('Clases')
+    axes[idx].set_ylabel('Porcentaje')
+    axes[idx].set_xticks([0, 1])
+    axes[idx].set_xticklabels(['0', '1'], rotation=0)
+
+plt.tight_layout()
+plt.show()
